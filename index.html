@@ -71,6 +71,98 @@
   --hex-c: #0000, #282828 0.5deg 119.5deg, #0000 120deg;
   --hex-bg: #1e1e1e;
 }
+/* Contact Me Button Styling */
+.btn {
+  display: block;
+  padding: 0.7em 1em;
+  background: transparent;
+  outline: none;
+  border: 0;
+  color: #d4af37;
+  letter-spacing: 0.1em;
+  font-family: monospace;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1;
+  text-align: center;
+}
+
+.cube {
+  position: relative;
+  transition: all 0.5s;
+}
+
+.cube .bg-top {
+  position: absolute;
+  height: 10px;
+  background: #d4af37;
+  bottom: 100%;
+  left: 5px;
+  right: -5px;
+  transform: skew(-45deg, 0);
+  transition: all 0.4s;
+}
+
+.cube .bg {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  right: 0;
+  background: #d4af37;
+  transition: all 0.4s;
+}
+
+.cube .bg-right {
+  position: absolute;
+  background: #d4af37;
+  top: -5px;
+  bottom: 5px;
+  width: 10px;
+  left: 100%;
+  transform: skew(0, -45deg);
+  transition: all 0.4s;
+}
+
+.cube .bg-inner {
+  background: #28282d;
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  bottom: 2px;
+}
+
+.cube .text {
+  position: relative;
+  transition: all 0.4s;
+}
+
+.cube:hover .bg-inner {
+  background: #d4af37;
+}
+
+.cube:hover .text {
+  color: #28282d;
+}
+
+.cube:hover .bg-right,
+.cube:hover .bg,
+.cube:hover .bg-top {
+  background: #28282d;
+}
+
+.cube:active {
+  z-index: 9999;
+  animation: bounce 0.1s linear;
+}
+
+@keyframes bounce {
+  50% {
+    transform: scale(0.9);
+  }
+}
 
 
   </style>
@@ -205,11 +297,13 @@
     }
   </script>
    <!-- Contact Me Section -->
-<div class="mt-10 text-center">
-  <p class="text-gray-700 dark:text-gray-300 text-sm">Need to reach me?</p>
-  <a href="https://d-sampath07.github.io/my-first-website/" target="_blank"
-     class="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300 transition">
-    Visit my main website →
+<!-- Contact Me Button -->
+<div class="mt-10 flex justify-center">
+  <a href="https://d-sampath07.github.io/my-first-website/" target="_blank" class="btn cube cube-hover" role="button">
+    <div class="bg-top"><div class="bg-inner"></div></div>
+    <div class="bg-right"><div class="bg-inner"></div></div>
+    <div class="bg"><div class="bg-inner"></div></div>
+    <div class="text">Contact Me</div>
   </a>
 </div>
 
