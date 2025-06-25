@@ -1,15 +1,12 @@
 flask
 flask-cors
-
-PyPDF2             # For merging, splitting, rotating PDFs
-pdf2image          # Convert PDF to images (requires poppler)
-PyMuPDF            # Alternative PDF image/text handling (fast & clean)
-
-docx2pdf           # DOCX → PDF (Windows only)
-pypandoc           # DOCX → PDF (Cross-platform fallback, requires Pandoc)
-
-img2pdf            # JPG/PNG to PDF
-Pillow             # Image manipulation (resizing, format, etc.)
-
-comtypes ; platform_system == "Windows"  # PPTX → PDF for Windows
-fpdf               # TXT to PDF (if used or optional later)
+gunicorn
+PyPDF2
+pdf2image
+PyMuPDF
+docx2pdf
+pypandoc
+img2pdf
+Pillow
+comtypes
+fpdf
