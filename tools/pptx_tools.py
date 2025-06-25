@@ -1,43 +1,19 @@
-import os
-import platform
-
-def convert(input_path, output_path, target_format):
-    ext = target_format.lower()
-
-    if ext == 'pdf':
-        convert_pptx_to_pdf(input_path, output_path)
-    elif ext == 'txt':
-        pptx_to_txt(input_path, output_path)
-    else:
-        raise ValueError(f"Unsupported target format for PPTX: {target_format}")
-
-def convert_pptx_to_pdf(input_path, output_path):
-    if platform.system() == "Windows":
-        import comtypes.client
-
-        powerpoint = comtypes.client.CreateObject("Powerpoint.Application")
-        powerpoint.Visible = 1
-
-        # Make sure input path is absolute and backslash formatted
-        input_path = os.path.abspath(input_path)
-        output_path = os.path.abspath(output_path)
-
-        presentation = powerpoint.Presentations.Open(input_path)
-        presentation.SaveAs(output_path, 32)  # 32 = PDF
-        presentation.Close()
-        powerpoint.Quit()
-    else:
-        os.system(f'unoconv -f pdf -o "{output_path}" "{input_path}"')
+# ✅ pptx_tools.py (works on Render)
+from pptx import Presentation
 
 def pptx_to_txt(input_path, output_path):
-    from pptx import Presentation
     prs = Presentation(input_path)
-    text = ""
-
+    text_runs = []
     for slide in prs.slides:
         for shape in slide.shapes:
             if hasattr(shape, "text"):
-                text += shape.text + "\n"
+                text_runs.append(shape.text)
+    full_text = "\n".join(text_runs)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(full_text)
 
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(text)
+def convert(input_path, output_path, target_format):
+    if target_format == "txt":
+        pptx_to_txt(input_path, output_path)
+    else:
+        raise ValueError(f"Conversion from PPTX to {target_format.upper()} is not supported.")
