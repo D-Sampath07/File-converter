@@ -1,0 +1,16 @@
+file-converter-project/
+├── app.py                  ← Flask backend entry point
+├── requirements.txt        ← Where we’ll list libraries for pip
+│
+├── tools/                  ← All your file logic lives here
+│   ├── __init__.py
+│   ├── pdf_tools.py
+│   ├── docx_tools.py
+│   ├── img_tools.py
+│   ├── pptx_tools.py
+│   └── text_tools.py
+│
+├── uploads/                ← Incoming user files go here
+├── output/                 ← Converted files are saved here
+├── static/                 ← CSS/JS frontend stuff (optional)
+└── templates/              ← Flask HTML templates (optional)
