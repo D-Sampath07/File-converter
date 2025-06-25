@@ -4,9 +4,9 @@ gunicorn
 PyPDF2
 pdf2image
 PyMuPDF
-docx2pdf
-pypandoc
 img2pdf
 Pillow
-comtypes
 fpdf
+python-pptx
+fpdf
+python-docx
