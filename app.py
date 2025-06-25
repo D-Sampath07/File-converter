@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, jsonify, render_template, after_this_request
+from flask import Flask, request, jsonify, render_template, Response
 from werkzeug.utils import secure_filename
 import os
 import traceback
@@ -26,10 +26,24 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# Helper generator to stream file and delete after sending
+def generate_and_delete(file_path):
+    try:
+        with open(file_path, 'rb') as f:
+            while chunk := f.read(8192):
+                yield chunk
+    finally:
+        try:
+            os.remove(file_path)
+            print(f"[🧹 CLEANUP] Deleted output file: {file_path}")
+        except Exception as e:
+            print(f"[⚠️ CLEANUP ERROR] Failed to delete {file_path}: {e}")
+
+
 # Route: Serve frontend
 @app.route('/')
 def index():
-    return render_template('index.html')  # Make sure 'templates/index.html' exists
+    return render_template('index.html')  # Make sure this exists in templates/
 
 
 # Route: Handle file conversion
@@ -64,42 +78,28 @@ def convert_file():
         print(f"[📤 Output] Will save as: {output_path}\n")
 
         # Dispatch to converter
-        try:
-            if ext == 'pdf':
-                pdf_tools.convert(input_path, output_path, target_format)
-            elif ext == 'docx':
-                docx_tools.convert(input_path, output_path, target_format)
-            elif ext == 'pptx':
-                pptx_tools.convert(input_path, output_path, target_format)
-            elif ext in {'jpg', 'jpeg', 'png'}:
-                img_tools.convert(input_path, output_path, target_format)
-            elif ext == 'txt':
-                text_tools.convert(input_path, output_path, target_format)
-            else:
-                return jsonify({"error": f"Unsupported file type: {ext}"}), 400
-        except Exception as convert_err:
-            print(f"[⚠️ CONVERT ERROR] {convert_err}")
-            if os.path.exists(input_path):
-                os.remove(input_path)
-            return jsonify({"error": "Conversion failed. Check file integrity or format."}), 500
+        if ext == 'pdf':
+            pdf_tools.convert(input_path, output_path, target_format)
+        elif ext == 'docx':
+            docx_tools.convert(input_path, output_path, target_format)
+        elif ext == 'pptx':
+            pptx_tools.convert(input_path, output_path, target_format)
+        elif ext in {'jpg', 'jpeg', 'png'}:
+            img_tools.convert(input_path, output_path, target_format)
+        elif ext == 'txt':
+            text_tools.convert(input_path, output_path, target_format)
+        else:
+            os.remove(input_path)
+            return jsonify({"error": f"Unsupported file type: {ext}"}), 400
 
-        print(f"[✅ SUCCESS] File converted successfully.\n")
+        # Delete input file immediately after conversion
+        os.remove(input_path)
+        print(f"[🧹 CLEANUP] Deleted input file: {input_path}")
 
-        # ✅ Schedule deletion after response is sent
-        @after_this_request
-        def remove_files(response):
-            try:
-                if os.path.exists(input_path):
-                    os.remove(input_path)
-                    print(f"[🧹 CLEANUP] Deleted input: {input_path}")
-                if os.path.exists(output_path):
-                    os.remove(output_path)
-                    print(f"[🧹 CLEANUP] Deleted output: {output_path}")
-            except Exception as cleanup_err:
-                print(f"[⚠️ CLEANUP ERROR] {cleanup_err}")
-            return response
-
-        return send_file(output_path, as_attachment=True)
+        # Stream the output file and delete it after sending
+        response = Response(generate_and_delete(output_path), mimetype='application/octet-stream')
+        response.headers['Content-Disposition'] = f'attachment; filename={output_filename}'
+        return response
 
     except Exception as e:
         print("\n[❌ ERROR] Exception occurred during conversion:")
