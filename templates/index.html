@@ -163,6 +163,16 @@ const allowedMimeTypes = {
 let selectedFile = null;
 let selectedType = null;
 
+const validConversions = {
+  pdf:    ['docx', 'pptx', 'txt', 'jpg', 'png'],
+  docx:   ['pdf', 'pptx', 'txt'],
+  pptx:   ['pdf', 'docx', 'txt', 'jpg', 'png'],
+  txt:    ['pdf', 'docx', 'pptx'],
+  jpg:    ['pdf', 'png'],
+  png:    ['pdf', 'jpg']
+};
+
+
 window.onload = function () {
   const fileInput = document.getElementById("file-input");
   const dropArea = document.getElementById("file-drop-area");
@@ -218,15 +228,18 @@ window.onload = function () {
 const convertOptions = document.getElementById("convert-options");
 convertOptions.classList.remove("hidden");
 
-// Hide the same type from Convert To buttons
+// Show only valid target formats
+const validTargets = validConversions[selectedType] || [];
+
 document.querySelectorAll(".convert-to-btn").forEach(btn => {
   const target = btn.getAttribute("data-format");
-  if (target === selectedType) {
-    btn.classList.add("hidden");
-  } else {
+  if (validTargets.includes(target)) {
     btn.classList.remove("hidden");
+  } else {
+    btn.classList.add("hidden");
   }
 });
+
   });
 
   // File input manually selected
@@ -242,15 +255,18 @@ document.querySelectorAll(".convert-to-btn").forEach(btn => {
 const convertOptions = document.getElementById("convert-options");
 convertOptions.classList.remove("hidden");
 
-// Hide same type as selected file
+// 🧠 Show only valid conversions based on selectedType
+const validTargets = validConversions[selectedType] || [];
+
 document.querySelectorAll(".convert-to-btn").forEach(btn => {
   const target = btn.getAttribute("data-format");
-  if (target === selectedType) {
-    btn.classList.add("hidden");
-  } else {
+  if (validTargets.includes(target)) {
     btn.classList.remove("hidden");
+  } else {
+    btn.classList.add("hidden");
   }
 });
+
 
   });
 
@@ -304,15 +320,43 @@ async function uploadFile(file, target_format) {
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
-    alert("File converted and downloaded successfully!");
+    showSuccessPopup();
   } catch (err) {
-    if (err.name !== "AbortError") {
-      alert("Conversion failed: " + err.message);
-    }
+   if (err.name !== "AbortError") {
+     showErrorPopup("File conversion failed: " + err.message);
+   }
+
   } finally {
     overlay.classList.add("hidden");
   }
 }
+
+function showErrorPopup(message) {
+  const errorPopup = document.getElementById("error-popup");
+  const errorMessage = document.getElementById("error-message");
+  const closeBtn = document.getElementById("close-error");
+
+  errorMessage.textContent = message;
+  errorPopup.classList.remove("hidden");
+
+  closeBtn.onclick = () => {
+    errorPopup.classList.add("hidden");
+  };
+}
+
+function showSuccessPopup(message) {
+  const successPopup = document.getElementById("success-popup");
+  const successMessage = document.getElementById("success-message");
+  const closeBtn = document.getElementById("close-success");
+
+  successMessage.textContent = message || "File converted and downloaded successfully!";
+  successPopup.classList.remove("hidden");
+
+  closeBtn.onclick = () => {
+    successPopup.classList.add("hidden");
+  };
+}
+
 
 </script>
 
@@ -324,6 +368,35 @@ async function uploadFile(file, target_format) {
     <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
       <div class="h-full bg-primary-500 animate-pulse-bar rounded-full w-3/4"></div>
     </div>
+  </div>
+</div>
+
+<!-- 🔄 Conversion Type Popup -->
+<div id="conversion-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+  <div class="glass-box bg-white dark:bg-dark-100 p-6 rounded-2xl shadow-xl max-w-md w-full text-center relative">
+    <button id="close-popup" class="absolute top-2 right-4 text-gray-500 hover:text-red-500 text-xl font-bold">×</button>
+    <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Choose format to convert:</h2>
+    <div class="grid grid-cols-3 gap-3" id="popup-options">
+      <!-- Buttons will be injected here -->
+    </div>
+  </div>
+</div>
+
+<!-- ⚠️ Error Popup -->
+<div id="error-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+  <div class="glass-box bg-white dark:bg-dark-100 p-6 rounded-2xl shadow-xl max-w-md w-full text-center relative">
+    <button id="close-error" class="absolute top-2 right-4 text-gray-500 hover:text-red-500 text-xl font-bold">×</button>
+    <h2 class="text-lg font-semibold mb-4 text-red-600">❌ Error</h2>
+    <p id="error-message" class="text-gray-700 dark:text-gray-200"></p>
+  </div>
+</div>
+
+<!-- ✅ Success Popup -->
+<div id="success-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+  <div class="glass-box bg-white dark:bg-dark-100 p-6 rounded-2xl shadow-xl max-w-md w-full text-center relative">
+    <button id="close-success" class="absolute top-2 right-4 text-gray-500 hover:text-green-500 text-xl font-bold">×</button>
+    <h2 class="text-lg font-semibold mb-4 text-green-600">✅ Success</h2>
+    <p id="success-message" class="text-gray-700 dark:text-gray-200">File converted and downloaded successfully!</p>
   </div>
 </div>
 
