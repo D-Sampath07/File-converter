@@ -1,0 +1,7 @@
+Flask
+Werkzeug
+python-docx
+reportlab
+Pillow
+pdfplumber
+python-pptx
