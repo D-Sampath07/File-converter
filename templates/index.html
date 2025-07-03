@@ -227,43 +227,48 @@
             })
           );
 
-          dropArea.addEventListener("drop", e => {
-            e.preventDefault();
-            dropArea.classList.remove("bg-blue-50");
+dropArea.addEventListener("drop", e => {
+  e.preventDefault();
+  e.stopPropagation();
+  dropArea.classList.remove("bg-blue-50");
 
-            const fileList = e.dataTransfer.files;
-            if (!fileList.length) return;
+  const fileList = Array.from(e.dataTransfer.files);
+  if (!fileList.length) return;
 
-            const file = fileList[0];
-            const mime = file.type;
-            const ext = file.name.split('.').pop().toLowerCase();
+  const firstFile = fileList[0];
+  const ext = firstFile.name.split('.').pop().toLowerCase();
 
-            // Validate based on selected type
-            if (selectedType === "image") {
-              if (!["image/jpeg", "image/png"].includes(mime)) {
-                alert("Invalid image type. Only JPG and PNG are supported.");
-                return;
-              }
-            } else {
-              const expectedMime = allowedMimeTypes[selectedType];
-              if (!expectedMime || mime !== expectedMime) {
-                alert(`Invalid file type. Expected a ${selectedType.toUpperCase()} file.`);
-                return;
-              }
-            }
+  // Auto-detect file type
+  if (["jpg", "jpeg", "png"].includes(ext)) {
+    selectedType = "image";
+  } else if (["pdf", "docx", "pptx", "txt"].includes(ext)) {
+    selectedType = ext;
+  } else {
+    alert("Unsupported file type.");
+    return;
+  }
 
-            // Set selected file and update type (keep it as 'image' if image)
-            selectedFile = selectedType === "image" ? Array.from(fileList) : fileList[0];
-            
-            // Block multiple non-image files
-            if (fileList.length > 1 && selectedType !== "image") {
-              alert("Only one file is allowed for this type.");
-              return;
-            }
+  // Validate
+  if (selectedType === "image") {
+    for (const file of fileList) {
+      if (!["image/jpeg", "image/png"].includes(file.type)) {
+        alert("Only JPG and PNG images are allowed.");
+        return;
+      }
+    }
+    selectedFile = fileList;
+    showConversionPopup(fileList);
+  } else {
+    const expectedMime = allowedMimeTypes[selectedType];
+    if (firstFile.type !== expectedMime) {
+      alert(`Expected a ${selectedType.toUpperCase()} file.`);
+      return;
+    }
+    selectedFile = firstFile;
+    showConversionPopup([firstFile]);
+  }
+});
 
-            // Show popup
-            showConversionPopup(selectedType === "image" ? Array.from(fileList) : [fileList[0]]);
-          });
 
           fileInput.addEventListener("change", () => {
             const files = Array.from(fileInput.files);
