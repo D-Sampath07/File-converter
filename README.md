@@ -2,6 +2,7 @@
 
 A clean and powerful Flask-based file converter that handles:
 - 📄 PDF ↔ DOCX / TXT
+- 📝 DOCX → TXT
 - 📃 TXT ↔ DOCX / PDF
 - 📊 PPTX → PDF
 - 🖼️ Image(s) → PDF
