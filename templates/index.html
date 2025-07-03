@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: { 100: '#1E293B', 200: '#0F172A' },
+            primary: { 500: '#3B82F6', 600: '#2563EB' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Poppins', sans-serif; transition: all 0.3s ease; }
+    .conversion-option:hover { transform: scale(1.05); }
+    .conversion-option.selected {
+      background-color: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+    .file-input-container {
+      border: 2px dashed rgba(59, 130, 246, 0.3);
+      transition: all 0.3s ease;
+    }
+    .file-input-container:hover {
+      border-color: rgba(59, 130, 246, 0.6);
+      background-color: rgba(59, 130, 246, 0.05);
+    }
+    .dark .file-input-container:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Light/Dark Mode-Aware Hex Pattern */
+    .bg-container {
+      width: 100%;
+      height: 100%;
+      --s: 37px; /* control the size */
+      position: relative;
+      z-index: 0;
+
+      /* Default (Light Mode) Colors */
+      --hex-c: #0000, #d6d6d6 0.5deg 119.5deg, #0000 120deg;
+      --hex-bg: #f1f5f9;
+
+      --g1: conic-gradient(from 60deg at 56.25% calc(425% / 6), var(--hex-c));
+      --g2: conic-gradient(from 180deg at 43.75% calc(425% / 6), var(--hex-c));
+      --g3: conic-gradient(from -60deg at 50% calc(175% / 12), var(--hex-c));
+
+      background:
+        var(--g1),
+        var(--g1) var(--s) calc(1.73 * var(--s)),
+        var(--g2),
+        var(--g2) var(--s) calc(1.73 * var(--s)),
+        var(--g3) var(--s) 0,
+        var(--g3) 0 calc(1.73 * var(--s)),
+        var(--hex-bg);
+
+      background-size: calc(2 * var(--s)) calc(3.46 * var(--s));
+    }
+
+    /* Dark mode override */
+    .dark .bg-container {
+      --hex-c: #0000, #282828 0.5deg 119.5deg, #0000 120deg;
+      --hex-bg: #1e1e1e;
+    }
+
+    @keyframes pulse-bar {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .animate-pulse-bar {
+      animation: pulse-bar 2s linear infinite;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-dark-200 min-h-screen">
+<div class="bg-container">
+  <div class="relative z-10 container-inner px-4 py-8 max-w-4xl mx-auto">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <!-- Header -->
+      <header class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">- File Converter -</h1>
+        <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-dark-100 text-gray-700 dark:text-gray-300">
+          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path id="theme-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- File Type Icons -->
+      <div class="grid grid-cols-3 gap-4 mb-6" id="input-type-options">
+        <button data-type="pdf" class="conversion-option bg-white dark:bg-dark-200 border border-gray-200 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center shadow-[10px_10px_20px_0px_rgba(124,58,237,0.6)] hover:shadow-[12px_12px_25px_2px_rgba(99,102,241,0.75)] transition-all duration-300 transform hover:-translate-y-1">📄<span class="mt-1 text-gray-700 dark:text-white text-sm">PDF</span></button>
+        <button data-type="docx" class="conversion-option bg-white dark:bg-dark-200 border border-gray-200 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center shadow-[10px_10px_20px_0px_rgba(124,58,237,0.6)] hover:shadow-[12px_12px_25px_2px_rgba(99,102,241,0.75)] transition-all duration-300 transform hover:-translate-y-1">📝<span class="mt-1 text-gray-700 dark:text-white text-sm">DOCX</span></button>
+        <button data-type="pptx" class="conversion-option bg-white dark:bg-dark-200 border border-gray-200 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center shadow-[10px_10px_20px_0px_rgba(124,58,237,0.6)] hover:shadow-[12px_12px_25px_2px_rgba(99,102,241,0.75)] transition-all duration-300 transform hover:-translate-y-1">📊<span class="mt-1 text-gray-700 dark:text-white text-sm">PPTX</span></button>
+        <button data-type="image" class="conversion-option bg-white dark:bg-dark-200 border border-gray-200 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center shadow-[10px_10px_20px_0px_rgba(124,58,237,0.6)] hover:shadow-[12px_12px_25px_2px_rgba(99,102,241,0.75)] transition-all duration-300 transform hover:-translate-y-1">🖼️<span class="mt-1 text-gray-700 dark:text-white text-sm">Image</span></button>
+        <button data-type="txt" class="conversion-option bg-white dark:bg-dark-200 border border-gray-200 dark:border-gray-600 rounded-xl p-4 flex flex-col items-center shadow-[10px_10px_20px_0px_rgba(124,58,237,0.6)] hover:shadow-[12px_12px_25px_2px_rgba(99,102,241,0.75)] transition-all duration-300 transform hover:-translate-y-1">📜<span class="mt-1 text-gray-700 dark:text-white text-sm">TXT</span></button>
+      </div>
+
+      <!-- File Drop Area -->
+      <div class="file-input-container rounded-xl p-8 mb-6 text-center cursor-pointer shadow-[0_0_25px_5px_rgba(124,58,237,0.6)] hover:shadow-[0_0_35px_10px_rgba(99,102,241,0.75)] transition-shadow duration-300" id="file-drop-area">
+        <input type="file" id="file-input" class="hidden" />
+        <div class="flex flex-col items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-primary-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">Drag & drop files here</h3>
+          <p class="text-gray-500 dark:text-gray-400">or click to browse files</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">(Only images support multi-select)</p>
+        </div>
+      </div>
+
+      <!-- Scripts -->
+      <script>
+        const allowedMimeTypes = {
+          pdf: "application/pdf",
+          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+          txt: "text/plain"
+        };
+
+        let selectedFile = null;
+        let selectedType = null;
+
+        const validConversions = {
+          pdf: ['docx', 'txt'],
+          docx: ['txt'],
+          txt: ['docx', 'pdf'],
+          pptx: ['pdf'],
+          image: ['pdf'],
+        };
+
+        function showConversionPopup(files) {
+          const popup = document.getElementById("conversion-popup");
+          const optionsContainer = document.getElementById("popup-options");
+          const selectedFilesDisplay = document.getElementById("selected-files-display");
+          
+          optionsContainer.innerHTML = "";
+
+          if (files.length === 1) {
+            selectedFilesDisplay.textContent = `Selected file: ${files[0].name}`;
+          } else {
+            selectedFilesDisplay.innerHTML = `Selected files:<br>` + files.map(f => `• ${f.name}`).join("<br>");
+          }
+
+          const validTargets = validConversions[selectedType] || [];
+
+          validTargets.forEach(format => {
+            const btn = document.createElement("button");
+            btn.className = "bg-primary-500 text-white rounded-lg py-2 px-4 hover:bg-primary-600 transition";
+            btn.innerText = format.toUpperCase();
+            btn.onclick = () => {
+              popup.classList.add("hidden");
+              uploadFile(selectedFile, format, selectedType);
+            };
+            optionsContainer.appendChild(btn);
+          });
+
+          popup.classList.remove("hidden");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          const fileInput = document.getElementById("file-input");
+          const dropArea = document.getElementById("file-drop-area");
+
+          // Theme toggle
+          document.getElementById("theme-toggle").addEventListener("click", () => {
+            document.documentElement.classList.toggle("dark");
+          });
+
+          // File type buttons
+          document.querySelectorAll(".conversion-option").forEach(button => {
+            button.addEventListener("click", () => {
+              selectedType = button.getAttribute("data-type");
+              if (selectedType === "image") {
+                fileInput.accept = "image/png,image/jpeg";
+                fileInput.multiple = true;
+              } else {
+                fileInput.accept = `.${selectedType}`;
+                fileInput.multiple = false;
+              }
+
+              fileInput.value = "";
+              fileInput.click();
+            });
+          });
+
+          // Drop area click
+          dropArea.addEventListener("click", () => {
+            if (selectedType === "image") {
+              fileInput.accept = "image/png,image/jpeg";
+              fileInput.multiple = true;
+            } else if (selectedType) {
+              fileInput.accept = `.${selectedType}`;
+              fileInput.multiple = false;
+            } else {
+              fileInput.accept = "*/*";
+              fileInput.multiple = false;
+            }
+
+            fileInput.value = "";
+            fileInput.click();
+          });
+
+          // Drag + drop styling
+          ["dragenter", "dragover"].forEach(evt =>
+            dropArea.addEventListener(evt, e => {
+              e.preventDefault();
+              dropArea.classList.add("bg-blue-50");
+            })
+          );
+
+          ["dragleave", "drop"].forEach(evt =>
+            dropArea.addEventListener(evt, e => {
+              e.preventDefault();
+              dropArea.classList.remove("bg-blue-50");
+            })
+          );
+
+          dropArea.addEventListener("drop", e => {
+            e.preventDefault();
+            dropArea.classList.remove("bg-blue-50");
+
+            const fileList = e.dataTransfer.files;
+            if (!fileList.length) return;
+
+            const file = fileList[0];
+            const mime = file.type;
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            // Validate based on selected type
+            if (selectedType === "image") {
+              if (!["image/jpeg", "image/png"].includes(mime)) {
+                alert("Invalid image type. Only JPG and PNG are supported.");
+                return;
+              }
+            } else {
+              const expectedMime = allowedMimeTypes[selectedType];
+              if (!expectedMime || mime !== expectedMime) {
+                alert(`Invalid file type. Expected a ${selectedType.toUpperCase()} file.`);
+                return;
+              }
+            }
+
+            // Set selected file and update type (keep it as 'image' if image)
+            selectedFile = selectedType === "image" ? Array.from(fileList) : fileList[0];
+            
+            // Block multiple non-image files
+            if (fileList.length > 1 && selectedType !== "image") {
+              alert("Only one file is allowed for this type.");
+              return;
+            }
+
+            // Show popup
+            showConversionPopup(selectedType === "image" ? Array.from(fileList) : [fileList[0]]);
+          });
+
+          fileInput.addEventListener("change", () => {
+            const files = Array.from(fileInput.files);
+            if (!files.length) return;
+
+            const isImage = selectedType === "image";
+
+            // Validate all selected files
+            if (isImage) {
+              for (const file of files) {
+                if (!["image/jpeg", "image/png"].includes(file.type)) {
+                  alert("Only JPG and PNG images are allowed.");
+                  fileInput.value = "";
+                  return;
+                }
+              }
+            } else {
+              const file = files[0];
+              const expectedMime = allowedMimeTypes[selectedType];
+              if (file.type !== expectedMime) {
+                alert(`Invalid file type. Expected a ${selectedType.toUpperCase()} file.`);
+                fileInput.value = "";
+                return;
+              }
+            }
+          
+            // Store file(s)
+            selectedFile = isImage ? files : files[0];
+            
+            // Show popup
+            showConversionPopup(files);
+          });
+
+          // Convert button clicked
+          document.querySelectorAll(".convert-to-btn").forEach(button => {
+            button.addEventListener("click", () => {
+              const targetFormat = button.getAttribute("data-format");
+
+              if (!selectedFile) {
+                alert("Please select a file first.");
+                return;
+              }
+
+              if (!selectedType) {
+                alert("Please select a file type from the icons first.");
+                return;
+              }
+
+              uploadFile(selectedFile, targetFormat, selectedType);
+            });
+          });
+
+          // Close "conversion type" popup when X is clicked
+          document.getElementById("close-popup").addEventListener("click", () => {
+            document.getElementById("conversion-popup").classList.add("hidden");
+          });
+        });
+
+        async function uploadFile(fileOrFiles, target_format, input_type) {
+          console.log("📤 input_type:", input_type);
+          console.log("📤 target_format:", target_format);
+
+          const overlay = document.getElementById("loading-overlay");
+          const cancelBtn = document.getElementById("cancel-btn");
+
+          const formData = new FormData();
+          console.log("📤 DEBUG before appending:");
+          console.log("input_type =", input_type);
+          console.log("target_format =", target_format);
+
+          if (Array.isArray(fileOrFiles)) {
+            fileOrFiles.forEach(f => formData.append("file", f));
+          } else {
+            formData.append("file", fileOrFiles);
+          }
+          
+          formData.append("input_type", input_type);
+          formData.append("output_type", target_format); 
+          console.log("📤 Uploading with:", {fileOrFiles, input_type, target_format});
+
+          let controller = new AbortController();
+
+          overlay.classList.remove("hidden");
+
+          cancelBtn.onclick = () => {
+            controller.abort();
+            overlay.classList.add("hidden");
+            alert("Conversion canceled.");
+          };
+
+          try {
+            const res = await fetch("/convert", {
+              method: "POST",
+              body: formData,
+              signal: controller.signal,
+            });
+
+            if (!res.ok) throw new Error("Conversion failed.");
+
+            const disposition = res.headers.get("Content-Disposition");
+            let filename = `converted.${target_format}`;
+            if (disposition && disposition.includes("filename=")) {
+              const match = disposition.match(/filename="?(.+?)"?$/);
+              if (match) filename = match[1];
+            }
+            
+            const blob = await res.blob();
+            const downloadLink = document.createElement("a");
+            downloadLink.href = window.URL.createObjectURL(blob);
+            downloadLink.download = filename;
+
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            showSuccessPopup(`File${Array.isArray(fileOrFiles) && fileOrFiles.length > 1 ? 's' : ''} converted and downloaded successfully!`);
+          } catch (err) {
+            if (err.name !== "AbortError") {
+              showErrorPopup("File conversion failed: " + err.message);
+            }
+          } finally {
+            overlay.classList.add("hidden");
+          }
+        }
+
+        function showErrorPopup(message) {
+          const errorPopup = document.getElementById("error-popup");
+          const errorMessage = document.getElementById("error-message");
+          const closeBtn = document.getElementById("close-error");
+
+          errorMessage.textContent = message;
+          errorPopup.classList.remove("hidden");
+
+          closeBtn.onclick = () => {
+            errorPopup.classList.add("hidden");
+          };
+        }
+
+        function showSuccessPopup(message) {
+          const successPopup = document.getElementById("success-popup");
+          const successMessage = document.getElementById("success-message");
+          const closeBtn = document.getElementById("close-success");
+
+          successMessage.textContent = message || "File converted and downloaded successfully!";
+          successPopup.classList.remove("hidden");
+
+          closeBtn.onclick = () => {
+            successPopup.classList.add("hidden");
+          };
+        }
+      </script>
+
+      <!-- Loader Overlay -->
+      <div id="loading-overlay" class="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center hidden">
+        <div class="bg-white dark:bg-dark-100 p-6 rounded-xl shadow-xl w-72 text-center relative">
+          <button id="cancel-btn" class="absolute top-2 right-2 text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+          <p class="text-lg text-gray-700 dark:text-white font-medium mb-4">Converting file...</p>
+          <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div class="h-full bg-primary-500 animate-pulse-bar rounded-full w-3/4"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversion Type Popup -->
+      <div id="conversion-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="glass-box bg-white dark:bg-dark-100 p-6 rounded-2xl shadow-xl max-w-md w-full text-center relative">
+          <button id="close-popup" class="absolute top-2 right-4 text-gray-500 hover:text-red-500 text-xl font-bold">×</button>
+          <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Choose format to convert:</h2>
+          <div id="selected-files-display" class="text-sm text-gray-500 dark:text-gray-400 mb-3"></div>
+          <div class="grid grid-cols-3 gap-3" id="popup-options">
+            <!-- Buttons will be injected here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Popup -->
+      <div id="error-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="glass-box bg-white dark:bg-dark-100 p-6 rounded-2xl shadow-xl max-w-md w-full text-center relative">
+          <button id="close-error" class="absolute top-2 right-4 text-gray-500 hover:text-red-500 text-xl font-bold">×</button>
+          <h2 class="text-lg font-semibold mb-4 text-red-600">❌ Error</h2>
+          <p id="error-message" class="text-gray-700 dark:text-gray-200"></p>
+        </div>
+      </div>
+
+      <!-- Success Popup -->
+      <div id="success-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="glass-box bg-white dark:bg-dark-100 p-6 rounded-2xl shadow-xl max-w-md w-full text-center relative">
+          <button id="close-success" class="absolute top-2 right-4 text-gray-500 hover:text-green-500 text-xl font-bold">×</button>
+          <h2 class="text-lg font-semibold mb-4 text-green-600">✅ Success</h2>
+          <p id="success-message" class="text-gray-700 dark:text-gray-200">File converted and downloaded successfully!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
